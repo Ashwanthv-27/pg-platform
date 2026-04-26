@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authContext";
+import { ThemeToggle } from "./ThemeToggle";
 
 export default function Navbar() {
-  const { user, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -45,12 +46,20 @@ export default function Navbar() {
                   📋 My Listings
                 </Link>
               </li>
+              {isAdmin && (
+                <li>
+                  <Link href="/admin" className={isActive("/admin")}>
+                    🛡️ Admin Panel
+                  </Link>
+                </li>
+              )}
             </>
           )}
         </ul>
 
         {/* Auth Actions */}
         <div className="navbar-actions">
+          <ThemeToggle />
           {user ? (
             <>
               <div className="user-badge">

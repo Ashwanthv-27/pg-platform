@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/authContext";
 
 const GENDER_OPTIONS = ["Any", "Male Only", "Female Only"];
 const FURNISHING_OPTIONS = ["Furnished", "Semi-Furnished", "Unfurnished"];
+const AMENITY_OPTIONS = ["WiFi", "AC", "Meals Included", "Laundry", "Power Backup", "Parking", "Geyser"];
 
 export default function AddPGPage() {
   const { user, loading } = useAuth();
@@ -21,7 +22,11 @@ export default function AddPGPage() {
     gender: "Any",
     furnishing: "Furnished",
     description: "",
+    map_url: "",
   });
+  
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -47,45 +52,70 @@ export default function AddPGPage() {
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
+  const toggleAmenity = (amenity: string) => {
+    setSelectedAmenities(prev => 
+      prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]
+    );
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFiles(Array.from(e.target.files));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSubmitting(true);
 
-    const { error: insertError } = await supabase.from("pg_listings").insert([
-      {
-        title: form.title,
-        location: form.location,
-        price: Number(form.price),
-        contact_number: form.contact_number,
-        gender: form.gender,
-        furnishing: form.furnishing,
-        description: form.description,
-        owner_id: user.id,
-      },
-    ]);
+    try {
+      const photoUrls: string[] = [];
 
-    if (insertError) {
-      // If owner_id column missing, try without it
-      if (insertError.code === "42703") {
-        const { error: retryError } = await supabase.from("pg_listings").insert([
-          {
-            title: form.title,
-            location: form.location,
-            price: Number(form.price),
-            contact_number: form.contact_number,
-          },
-        ]);
-        if (retryError) {
-          setError(retryError.message);
-        } else {
-          setSuccess(true);
+      // Upload photos
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('pg_photos')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          throw uploadError;
         }
-      } else {
-        setError(insertError.message);
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('pg_photos')
+          .getPublicUrl(filePath);
+
+        photoUrls.push(publicUrl);
       }
-    } else {
+
+      const { error: insertError } = await supabase.from("pg_listings").insert([
+        {
+          title: form.title,
+          location: form.location,
+          price: Number(form.price),
+          contact_number: form.contact_number,
+          gender: form.gender,
+          furnishing: form.furnishing,
+          description: form.description,
+          owner_id: user.id,
+          map_url: form.map_url,
+          amenities: selectedAmenities,
+          photos: photoUrls,
+        },
+      ]);
+
+      if (insertError) {
+        throw insertError;
+      }
+      
       setSuccess(true);
+    } catch (err: any) {
+      setError(err.message || "Failed to add listing");
     }
 
     setSubmitting(false);
@@ -103,7 +133,7 @@ export default function AddPGPage() {
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <button
               className="btn btn-ghost"
-              onClick={() => { setSuccess(false); setForm({ title: "", location: "", price: "", contact_number: "", gender: "Any", furnishing: "Furnished", description: "" }); }}
+              onClick={() => { setSuccess(false); setForm({ title: "", location: "", price: "", contact_number: "", gender: "Any", furnishing: "Furnished", description: "", map_url: "" }); setSelectedAmenities([]); setFiles([]); }}
             >
               Add Another
             </button>
@@ -246,6 +276,50 @@ export default function AddPGPage() {
               rows={3}
               style={{ resize: "vertical", fontFamily: "inherit" }}
             />
+          </div>
+
+          {/* Map URL */}
+          <div className="form-group">
+            <label htmlFor="pg-map" className="form-label">Google Map Embed/Share URL (optional)</label>
+            <input
+              id="pg-map"
+              className="form-input"
+              placeholder="https://maps.app.goo.gl/..."
+              value={form.map_url}
+              onChange={set("map_url")}
+            />
+          </div>
+
+          {/* Amenities */}
+          <div className="form-group">
+            <label className="form-label">Amenities</label>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              {AMENITY_OPTIONS.map((amenity) => (
+                <label key={amenity} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", color: "var(--text-primary)" }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedAmenities.includes(amenity)}
+                    onChange={() => toggleAmenity(amenity)}
+                    style={{ width: 16, height: 16, accentColor: "var(--brand-primary)" }}
+                  />
+                  {amenity}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Photos */}
+          <div className="form-group">
+            <label htmlFor="pg-photos" className="form-label">Upload Photos</label>
+            <input
+              id="pg-photos"
+              type="file"
+              className="form-input"
+              multiple
+              accept="image/*"
+              onChange={handleFileChange}
+            />
+            <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>You can select multiple images.</p>
           </div>
 
           <button

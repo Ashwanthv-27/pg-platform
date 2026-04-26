@@ -10,6 +10,7 @@ type PG = {
   location: string;
   price: number;
   contact_number: string;
+  photos: string[];
 };
 
 const LOCATION_EMOJIS: Record<string, string> = {
@@ -110,19 +111,19 @@ export default function Home() {
           ) : (
             <div className="pg-grid">
               {pgs.map((pg) => (
-                <div key={pg.id} className="card">
-                  {/* Card image placeholder */}
+                <Link href={`/pg/${pg.id}`} key={pg.id} className="card" style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+                  {/* Card image */}
                   <div
                     className="card-image"
                     style={{
-                      background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
+                      background: pg.photos && pg.photos.length > 0 ? `url(${pg.photos[0]}) center/cover` : "var(--bg-input)",
                       fontSize: 52,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                     }}
                   >
-                    🏠
+                    {(!pg.photos || pg.photos.length === 0) && "🏠"}
                   </div>
                   <div className="card-body">
                     <div className="card-title">{pg.title}</div>
@@ -132,17 +133,10 @@ export default function Home() {
                     </div>
                     <div className="card-footer">
                       <span className="price-badge">₹{pg.price.toLocaleString()}/mo</span>
-                      <a
-                        href={`https://wa.me/91${pg.contact_number}?text=Hi! I found your PG "${pg.title}" on PG Finder and I'm interested.`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-whatsapp btn-sm"
-                      >
-                        <span>💬</span> WhatsApp
-                      </a>
+                      <span className="btn btn-primary btn-sm" style={{ pointerEvents: "none" }}>View Details</span>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}
