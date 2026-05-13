@@ -1,20 +1,27 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/authContext";
-import { ThemeProvider } from "./components/ThemeProvider";
 import Navbar from "./components/Navbar";
 
-const inter = Inter({
+const font = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-sans",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "PG Finder — Find Paying Guest Accommodations",
+  title: {
+    default: "Nakshathra Apartments & PG — Premium Accommodation",
+    template: "%s — Nakshathra Properties",
+  },
   description:
-    "Discover and list verified PG / hostel accommodations near you. Browse by location, price and contact owners directly via WhatsApp.",
+    "Premium PG rooms, studio apartments and flats for rent in Ernakulam, Kerala. Safe, comfortable and well-maintained. Contact us today.",
+  keywords: ["PG rooms Ernakulam", "apartments for rent Kerala", "Nakshathra Apartments", "PG accommodation"],
+  openGraph: {
+    siteName: "Nakshathra Properties",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -23,16 +30,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
-      <body>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AuthProvider>
-            <div className="page-wrapper">
-              <Navbar />
-              <main>{children}</main>
-            </div>
-          </AuthProvider>
-        </ThemeProvider>
+    <html lang="en" className={font.variable} suppressHydrationWarning>
+      <body className="font-sans text-slate-900 antialiased bg-slate-50 selection:bg-emerald-200 selection:text-emerald-900">
+        <AuthProvider>
+          <div className="page-wrapper">
+            <Navbar />
+            <main>{children}</main>
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );

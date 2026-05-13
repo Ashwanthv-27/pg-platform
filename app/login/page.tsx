@@ -1,180 +1,152 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { Lock, Mail, Eye, EyeOff } from "lucide-react";
 
-type Mode = "signin" | "signup";
+import { Suspense } from "react";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("signin");
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [mode, setMode] = useState<"password" | "magic">("password");
+  const [magicSent, setMagicSent] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const redirectTo = searchParams.get("redirect") ?? "/admin";
+  const urlError = searchParams.get("error");
+
+  useEffect(() => {
+    if (urlError === "unauthorized") {
+      setError("Your account doesn't have admin access. Contact the super admin.");
+    }
+  }, [urlError]);
+
+  const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
     setLoading(true);
-
-    if (mode === "signup") {
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-      if (signUpError) {
-        setError(signUpError.message);
-      } else {
-        setSuccess(
-          "Account created! Check your email to confirm, then sign in."
-        );
-      }
-    } else {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (signInError) {
-        setError(signInError.message);
-      } else {
-        router.push("/");
-        router.refresh();
-      }
-    }
-
+    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
+    if (err) { setError(err.message); return; }
+    router.push(redirectTo);
+    router.refresh();
+  };
+
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    const { error: err } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: `${window.location.origin}/admin` } });
+    setLoading(false);
+    if (err) { setError(err.message); return; }
+    setMagicSent(true);
   };
 
   return (
-    <div className="page-center">
-      <div className="form-card" style={{ maxWidth: 440 }}>
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: "50%",
-              background: "linear-gradient(135deg, #14b8a6, #0d9488)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 24,
-              margin: "0 auto 16px",
-              boxShadow: "0 0 20px rgba(20,184,166,0.4)",
-            }}
-          >
-            🏠
+    <div className="login-page">
+      <div className="login-bg-orbs">
+        <div className="orb orb-1" />
+        <div className="orb orb-2" />
+      </div>
+
+      <div className="login-card">
+        {/* Brand */}
+        <div className="login-brand">
+          <div className="login-brand-icon">🏡</div>
+          <div>
+            <h1 className="login-brand-name">Nakshathra</h1>
+            <p className="login-brand-sub">Property Management</p>
           </div>
-          <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.5px", marginBottom: 6 }}>
-            {mode === "signin" ? "Welcome back" : "Create account"}
-          </h1>
-          <p style={{ color: "var(--text-secondary)", fontSize: 14 }}>
-            {mode === "signin"
-              ? "Sign in to manage your PG listings"
-              : "Join PG Finder and list your PG for free"}
-          </p>
         </div>
 
-        {/* Mode Toggle */}
-        <div
-          style={{
-            display: "flex",
-            background: "rgba(255,255,255,0.04)",
-            borderRadius: "var(--radius-sm)",
-            padding: 4,
-            marginBottom: 24,
-            border: "1px solid var(--border-default)",
-          }}
-        >
-          {(["signin", "signup"] as Mode[]).map((m) => (
-            <button
-              key={m}
-              onClick={() => { setMode(m); setError(""); setSuccess(""); }}
-              style={{
-                flex: 1,
-                padding: "9px 0",
-                borderRadius: 6,
-                border: "none",
-                cursor: "pointer",
-                fontSize: 14,
-                fontWeight: 600,
-                fontFamily: "inherit",
-                transition: "all 0.2s",
-                background: mode === m
-                  ? "linear-gradient(135deg, #14b8a6, #0d9488)"
-                  : "transparent",
-                color: mode === m ? "#fff" : "var(--text-secondary)",
-              }}
-            >
-              {m === "signin" ? "Sign In" : "Sign Up"}
-            </button>
-          ))}
+        <h2 className="login-title">Admin Access</h2>
+        <p className="login-subtitle">Sign in to manage your properties</p>
+
+        {/* Mode toggle */}
+        <div className="login-mode-toggle">
+          <button className={`mode-btn ${mode === "password" ? "active" : ""}`} onClick={() => setMode("password")}>Password</button>
+          <button className={`mode-btn ${mode === "magic" ? "active" : ""}`} onClick={() => setMode("magic")}>Magic Link</button>
         </div>
 
-        {/* Alerts */}
         {error && <div className="alert alert-error">⚠️ {error}</div>}
-        {success && <div className="alert alert-success">✅ {success}</div>}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} id="auth-form">
-          <div className="form-group">
-            <label htmlFor="email" className="form-label">Email Address</label>
-            <input
-              id="email"
-              type="email"
-              className="form-input"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
+        {magicSent ? (
+          <div className="alert alert-success" style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>📬</div>
+            <strong>Check your email!</strong>
+            <p style={{ marginTop: 4, fontSize: 13 }}>We sent a magic link to <strong>{email}</strong>. Click it to sign in.</p>
           </div>
+        ) : (
+          <form onSubmit={mode === "password" ? handlePasswordLogin : handleMagicLink}>
+            <div className="form-group">
+              <label className="form-label">Email Address</label>
+              <div className="input-icon-wrap relative">
+                <Mail size={16} className="input-icon absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  id="login-email"
+                  type="email"
+                  className="form-input pl-10"
+                  placeholder="admin@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                />
+              </div>
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="password" className="form-label">Password</label>
-            <input
-              id="password"
-              type="password"
-              className="form-input"
-              placeholder={mode === "signup" ? "Min. 6 characters" : "Enter your password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={mode === "signup" ? 6 : undefined}
-              autoComplete={mode === "signin" ? "current-password" : "new-password"}
-            />
-          </div>
-
-          <button
-            type="submit"
-            id="auth-submit"
-            className="btn btn-primary"
-            disabled={loading}
-            style={{ width: "100%", marginTop: 8, padding: "13px 0", fontSize: 15 }}
-          >
-            {loading ? (
-              <div className="spinner" />
-            ) : mode === "signin" ? (
-              "Sign In →"
-            ) : (
-              "Create Account →"
+            {mode === "password" && (
+              <div className="form-group mt-4">
+                <label className="form-label">Password</label>
+                <div className="input-icon-wrap relative">
+                  <Lock size={16} className="input-icon absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    id="login-password"
+                    type={showPassword ? "text" : "password"}
+                    className="form-input pl-10 pr-10"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    autoComplete="current-password"
+                  />
+                  <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
             )}
-          </button>
-        </form>
 
-        <div style={{ textAlign: "center", marginTop: 24 }}>
-          <Link href="/" style={{ color: "var(--text-muted)", fontSize: 13, textDecoration: "none" }}>
-            ← Back to listings
-          </Link>
-        </div>
+            <button type="submit" id="login-submit" className="btn btn-cta" style={{ width: "100%", marginTop: 16, padding: "13px 0", fontSize: 15 }} disabled={loading}>
+              {loading ? (
+                <div className="spinner" />
+              ) : mode === "password" ? (
+                "Sign In →"
+              ) : (
+                "Send Magic Link →"
+              )}
+            </button>
+          </form>
+        )}
+
+        <p style={{ textAlign: "center", marginTop: 24, fontSize: 13, color: "var(--text-muted)" }}>
+          This is a private admin panel. Unauthorized access is prohibited.
+        </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }
