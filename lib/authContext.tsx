@@ -67,10 +67,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       if (currentUser) {
-        fetchProfile(currentUser.id);
+        setLoading(true);
+        fetchProfile(currentUser.id).finally(() => setLoading(false));
       } else {
         setProfile(null);
         setIsAdmin(false);
+        setLoading(false);
       }
     });
 

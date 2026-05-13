@@ -115,48 +115,6 @@
 .lead-meta { @apply text-xs text-slate-500 truncate; }
 .lead-status-badge { @apply text-xs font-medium px-2.5 py-1 rounded-full border whitespace-nowrap; }
 
-/* Admin Sidebar Styles */
-.sidebar-brand { @apply flex items-center gap-3 p-6 border-b border-slate-200; }
-.sidebar-brand-icon { @apply w-10 h-10 rounded-xl bg-brand-500 text-white flex items-center justify-center text-xl shadow-sm; }
-.sidebar-brand-name { @apply font-bold text-slate-900; }
-.sidebar-brand-sub { @apply text-xs font-medium text-slate-500; }
-
-.sidebar-nav { @apply flex-1 px-4 py-6 flex flex-col gap-1 overflow-y-auto; }
-.sidebar-nav-item { @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors; }
-.sidebar-nav-item.active { @apply bg-brand-50 text-brand-700 font-semibold; }
-.sidebar-nav-chevron { @apply ml-auto text-slate-400; }
-.sidebar-nav-item.active .sidebar-nav-chevron { @apply text-brand-500; }
-
-.sidebar-footer { @apply flex items-center justify-between p-4 border-t border-slate-200 bg-slate-50; }
-.sidebar-user { @apply flex items-center gap-3 overflow-hidden; }
-.sidebar-avatar { @apply w-9 h-9 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm shrink-0; }
-.sidebar-user-info { @apply flex flex-col overflow-hidden; }
-.sidebar-user-name { @apply text-sm font-bold text-slate-900 truncate; }
-.sidebar-user-role { @apply text-xs font-medium text-slate-500; }
-.sidebar-signout { @apply p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0; }
-
-/* Admin Properties & Rooms Styles */
-.property-row { @apply flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-5 hover:border-slate-300 transition-colors; }
-.property-row-left { @apply flex gap-4 w-full md:w-auto min-w-0; }
-.property-type-badge { @apply shrink-0 px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-bold uppercase tracking-wider self-start mt-1; }
-.property-row-name { @apply text-lg font-bold text-slate-900 truncate; }
-.property-row-tagline { @apply text-sm text-slate-500 truncate; }
-.property-row-address { @apply text-xs text-slate-400 mt-1 truncate; }
-.property-row-stats { @apply flex gap-6 shrink-0; }
-.prop-stat { @apply flex flex-col; }
-.prop-stat-value { @apply text-xl font-bold text-slate-900 leading-none; }
-.prop-stat-label { @apply text-xs font-medium text-slate-500 mt-1 uppercase tracking-wider; }
-.property-row-actions { @apply flex items-center gap-3 shrink-0; }
-.publish-toggle { @apply flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 transition-colors; }
-.publish-toggle.published { @apply bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100; }
-.empty-state { @apply flex flex-col items-center justify-center py-20 px-4 border border-dashed border-slate-300 rounded-2xl bg-slate-50/50 text-center; }
-.empty-icon { @apply text-slate-300 mb-4; }
-.empty-state p { @apply text-slate-500 font-medium mb-6; }
-
-/* Loading state */
-.admin-loading { @apply min-h-screen flex items-center justify-center bg-slate-50; }
-.admin-page-loading { @apply h-[60vh] flex items-center justify-center; }
-
 /* Spinners */
 .spinner {
   border: 2px solid rgba(0, 0, 0, 0.1);
